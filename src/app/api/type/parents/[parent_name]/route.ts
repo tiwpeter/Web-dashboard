@@ -24,13 +24,15 @@ export async function GET(req, { params }) {
 
     const products =
       categoryIds.length > 0
-        ? await db.all(
-            `SELECT id, name, price, category_id
-             FROM products
-             WHERE category_id IN (${placeholders});`,
-            categoryIds
-          )
-        : [];
+  ? await db.all(
+      `SELECT p.id, p.name, p.price, p.category_id,
+              (SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id LIMIT 1) AS product_image
+       FROM products p
+       WHERE p.category_id IN (${placeholders});`,
+      categoryIds
+    )
+  : [];
+
 
     return NextResponse.json({ parent_name, categories, products }, { status: 200 });
   } catch (error) {
