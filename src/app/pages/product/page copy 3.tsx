@@ -126,7 +126,11 @@ export default function Order() {
           <div className="flex justify-center items-center space-x-2 mt-4">
             <button
               aria-label="Previous Page"
-              className={`flex items-center px-4 py-2 text-white rounded-lg `}
+              className={`flex items-center px-4 py-2 text-white rounded-lg ${
+                currentPage === 1
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-500 hover:bg-blue-600"
+              }`}
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
             >
@@ -151,7 +155,11 @@ export default function Order() {
 
             <button
               aria-label="Next Page"
-              className={`flex items-center px-4 py-2 text-white rounded-lg `}
+              className={`flex items-center px-4 py-2 text-white rounded-lg ${
+                currentPage === totalPages
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-500 hover:bg-blue-600"
+              }`}
               onClick={() =>
                 setCurrentPage((prev) => Math.min(prev + 1, totalPages))
               }
