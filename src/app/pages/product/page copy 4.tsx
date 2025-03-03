@@ -1,12 +1,10 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function Order() {
   const [products, setProducts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6; // แสดงแค่ 6 รายการต่อหน้า
-  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -103,12 +101,7 @@ export default function Order() {
                       {product.stock}
                     </td>
                     <td className="px-4 py-2 border-b border-gray-300 flex justify-center gap-2">
-                      <button
-                        className="bg-blue-500 text-white py-2 px-4 rounded-lg"
-                        onClick={() =>
-                          router.push(`/pages/product/${product.product_id}`)
-                        }
-                      >
+                      <button className="bg-blue-500 text-white py-2 px-4 rounded-lg">
                         View
                       </button>
                       <button className="bg-red-500 text-white py-2 px-4 rounded-lg">

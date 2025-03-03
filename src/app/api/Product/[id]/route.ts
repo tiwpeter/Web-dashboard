@@ -3,7 +3,7 @@ import { getDBConnection } from "../../../lib/db";
 
 export async function GET(request, { params }) {
   const db = await getDBConnection();
-  const { id } = params; // รับ product ID จาก URL
+  const { id } = await params; // เพิ่ม await ที่นี่
 
   try {
     // 1️⃣ ดึงข้อมูลสินค้า
@@ -13,13 +13,24 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    // 2️⃣ ดึงรูปภาพสินค้า
+    // 2️⃣ ดึงข้อมูล category_name จากตาราง categories (ใช้ category_id ที่อยู่ใน product)
+    const category = await db.get(
+      "SELECT name FROM categories WHERE id = ?", // เปลี่ยนเป็นคอลัมน์ name
+      [product.category_id] // ใช้ category_id ที่อยู่ใน product
+    );
+
+    // ถ้าไม่พบ category ให้คืน error
+    if (!category) {
+      return NextResponse.json({ error: "Category not found" }, { status: 404 });
+    }
+
+    // 3️⃣ ดึงรูปภาพสินค้า
     const productImages = await db.all(
       "SELECT image_url FROM product_images WHERE product_id = ?",
       [id]
     );
 
-    // 3️⃣ ดึงข้อมูลตัวเลือกสินค้าโดยตรงจาก options (ไม่ใช้ JOIN)
+    // 4️⃣ ดึงข้อมูลตัวเลือกสินค้าโดยตรงจาก options (ไม่ใช้ JOIN)
     const options = await db.all(
       `SELECT id, option_type_name, option_name, option_price, image_url 
        FROM options 
@@ -27,33 +38,32 @@ export async function GET(request, { params }) {
       [id]
     );
 
-    // 4️⃣ จัดกลุ่มตัวเลือกสินค้า (option_type_name) และจัดการข้อมูลตัวเลือก
-    // 4️⃣ จัดกลุ่มตัวเลือกสินค้า (option_type_name) และจัดการข้อมูลตัวเลือก
-const optionsGrouped = options.reduce((acc, opt) => {
-  const { option_type_name, option_name, option_price, image_url } = opt;
+    // 5️⃣ จัดกลุ่มตัวเลือกสินค้า (option_type_name) และจัดการข้อมูลตัวเลือก
+    const optionsGrouped = options.reduce((acc, opt) => {
+      const { option_type_name, option_name, option_price, image_url } = opt;
 
-  if (!acc[option_type_name]) {
-    acc[option_type_name] = {
-      option_type: option_type_name, // เก็บชื่อ option_type
-      options: [],
-    };
-  }
+      if (!acc[option_type_name]) {
+        acc[option_type_name] = {
+          option_type: option_type_name,
+          options: [],
+        };
+      }
 
-  // Check if image_url exists and add it to the option
-  acc[option_type_name].options.push({
-    option_name: option_name, // เก็บชื่อ option_name
-    option_price: option_price, // เก็บราคา option_price
-    image_urls: image_url ? [image_url] : [], // เก็บ image_url ถ้ามี
-  });
-  return acc;
-}, {});
+      acc[option_type_name].options.push({
+        option_name: option_name,
+        option_price: option_price,
+        image_urls: image_url ? [image_url] : [],
+      });
 
+      return acc;
+    }, {});
 
-    // 5️⃣ รวมข้อมูลทั้งหมด
+    // 6️⃣ รวมข้อมูลทั้งหมด
     const productData = {
       ...product,
-      images: productImages.map((img) => img.image_url), // แปลง array ของ image_url
-      options: Object.values(optionsGrouped), // แปลง Object เป็น Array
+      category_name: category.name, // ใช้ category.name แทน category_name
+      images: productImages.map((img) => img.image_url),
+      options: Object.values(optionsGrouped),
     };
 
     return NextResponse.json(productData, { status: 200 });

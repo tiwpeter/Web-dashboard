@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google"; // Use a valid font like 'Inter' from Google Fonts
 import "./globals.css";
 import Slieder from "./component/layout/Slie/page";
+import Navpage from "./component/navpage/page";
 
 // Example of valid Google Font import
 const inter = Inter({
@@ -35,8 +36,7 @@ export default function RootLayout({
               className="flex items-center justify-between p-4 ml-[17.5rem] sm:ml-0"
             >
               <div className="flex-col text-xl font-bold text-white mx-3">
-                <div>pages/dashboard</div>
-                <div className="text-3xl">Dashboard</div>
+                <Navpage />
               </div>
 
               <div className="ml-4 flex space-x-4 items-center">

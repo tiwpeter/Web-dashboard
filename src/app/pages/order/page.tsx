@@ -1,8 +1,10 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const OrderList = () => {
   const [orders, setOrders] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
     // Fetch orders data from the API
@@ -137,7 +139,12 @@ const OrderList = () => {
                 </td>
                 <td className="px-4 py-2 border border-gray-300">comple</td>
                 <td className="px-4 py-2 border border-gray-300">
-                  <button className="px-3 py-1 text-black rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                  <button
+                    className="px-3 py-1 text-black rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    onClick={() =>
+                      router.push(`/pages/order/${order.order_id}`)
+                    }
+                  >
                     View
                   </button>
                 </td>
