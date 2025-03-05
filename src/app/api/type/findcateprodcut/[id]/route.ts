@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDBConnection } from '../../../lib/db';
+import { getDBConnection } from '../../../../lib/db';
 
 export async function GET(req) {
   const db = await getDBConnection();
