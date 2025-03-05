@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDBConnection } from "../../lib/db";
 
-export async function POST(request) {
+export async function POST(request: Request) { // 🛠 เพิ่มประเภท `Request`
   let db;
   try {
     db = await getDBConnection();
@@ -105,7 +105,7 @@ export async function POST(request) {
     });
   } catch (error) {
     if (db) await db.run("ROLLBACK");
-    console.error("🔥 Error:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("🔥 Error:", );
+    return NextResponse.json({  }, { status: 500 });
   }
 }
