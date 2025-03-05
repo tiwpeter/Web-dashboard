@@ -1,8 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 
+// Define a type for the parent category
+interface ParentCategory {
+  id: number;
+  parent_name: string;
+  parent_image_url: string; // Add the property type for the image URL
+}
+
 const CategoryAdd = () => {
-  const [parents, setParents] = useState([]);
+  const [parents, setParents] = useState<ParentCategory[]>([]); // Specify the type for parents
   const [categories, setCategories] = useState([]);
   const [selectedParentId, setSelectedParentId] = useState("");
   const [categoryName, setCategoryName] = useState("");
@@ -17,7 +24,7 @@ const CategoryAdd = () => {
     try {
       const res = await fetch("http://localhost:3001/api/type/parents");
       const data = await res.json();
-      setParents(data);
+      setParents(data); // TypeScript will now understand that this is an array of ParentCategory
     } catch (error) {
       console.error("Error fetching parent categories:", error);
     }
@@ -33,7 +40,7 @@ const CategoryAdd = () => {
     }
   };
 
-  const handleParentChange = (e) => {
+  const handleParentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const parentId = e.target.value;
     setSelectedParentId(parentId);
 

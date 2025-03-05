@@ -5,8 +5,8 @@ interface Params {
   id: string; // Define the type of the `id` parameter (assuming it’s a string)
 }
 
-export async function GET(req: NextRequest, { params }: { params: Params }) {
-  const { id } = params; // Access the category_id from params
+export async function GET(request : Request, context:any) {
+  const { id } = context; // Access the category_id from params
   
   if (!id) {
     return NextResponse.json({ error: "category_id is required" }, { status: 400 });

@@ -5,13 +5,15 @@ import { useParams } from "next/navigation";
 const ProductId = () => {
   const { id } = useParams(); // อ่านค่าจาก URL สำหรับ product id
   const [product, setProduct] = useState({
-    product_name: "",
+    name: "",
     description: "",
     price: "",
     stock: "",
     product_image: "", // เพิ่ม field สำหรับรูปภาพ
     category_id: "", // เพิ่มสำหรับเก็บ category id
     category_name: "", // เพิ่มสำหรับเก็บ category name
+    sale_percent: "",
+    images: [] as string[], // เพิ่ม images เป็น Array of strings
   });
   const [parentCategory, setParentCategory] = useState(""); // สถานะสำหรับเก็บชื่อ parent category
 
@@ -58,7 +60,9 @@ const ProductId = () => {
     }
   }, [product.category_id]); // เมื่อ category_id เปลี่ยนให้ดึงข้อมูลใหม่
 
-  const handleChange = (e) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setProduct((prev) => ({
       ...prev,

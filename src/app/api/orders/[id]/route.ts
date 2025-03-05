@@ -1,13 +1,37 @@
 import { NextResponse } from "next/server";
 import { getDBConnection } from "../../../lib/db"; // Adjust the path as necessary
 
-export async function GET(request, { params }) {
-  let db;
+interface OrderItem {
+  order_item_id: number;
+  product_id: number;
+  product_name: string;
+  product_price: number;
+  product_quantity: number;
+}
+
+interface Order {
+  order_id: number;
+  user_email: string;
+  total_price: number;
+  shipping_address: string;
+  phone: string;
+  payment_method: string;
+  created_at: string;
+  items: OrderItem[];
+}
+
+interface Database {
+  all: (query: string, params: any[]) => Promise<any[]>;  // Add the type for `all` function
+  get: (query: string, params: any[]) => Promise<any>;  // Add the type for `get` function
+}
+
+export async function GET(request : Request, context:any) {
+  let db: Database;
   try {
     db = await getDBConnection();
 
-    // Get the `id` from the request params
-    const { id } = params; // This will be the dynamic `id` in the URL
+    // Get the `id` from the request params (dynamic route)
+    const { id } = context; // This should be the dynamic `id` from the URL
 
     // Query to get the order and its associated items
     const ordersQuery = `
@@ -38,7 +62,7 @@ export async function GET(request, { params }) {
     }
 
     // Group orders with their respective items
-    const groupedOrders = orders.reduce((acc, row) => {
+    const groupedOrders = orders.reduce<{ [key: number]: Order }>((acc, row) => {
       const orderId = row.order_id;
       if (!acc[orderId]) {
         acc[orderId] = {
@@ -49,7 +73,7 @@ export async function GET(request, { params }) {
           phone: row.phone,
           payment_method: row.payment_method,
           created_at: row.created_at,
-          items: []
+          items: [],
         };
       }
       if (row.order_item_id) {
@@ -58,7 +82,7 @@ export async function GET(request, { params }) {
           product_id: row.product_id,
           product_name: row.product_name,
           product_price: row.product_price,
-          product_quantity: row.product_quantity
+          product_quantity: row.product_quantity,
         });
       }
       return acc;
@@ -70,7 +94,7 @@ export async function GET(request, { params }) {
     return NextResponse.json(responseOrder, { status: 200 });
 
   } catch (error) {
-    console.error("🔥 Error:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("🔥 Error:", );
+    return NextResponse.json({  }, { status: 500 });
   }
 }

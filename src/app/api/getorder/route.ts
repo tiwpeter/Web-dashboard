@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getDBConnection } from "../../lib/db"; // ปรับ path ตามจริง
 
-export async function GET(req) {
+export async function GET(req:NextRequest) {
   try {
     const db = await getDBConnection();
 
@@ -19,13 +19,7 @@ export async function GET(req) {
       db.get(
         `SELECT id, user_email, total_price, shipping_address, phone, payment_method, created_at FROM orders WHERE id = ?`,
         [orderId],
-        (err, row) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(row);
-          }
-        }
+        
       );
     });
 
@@ -38,13 +32,7 @@ export async function GET(req) {
       db.all(
         `SELECT product_id, name, price, quantity FROM order_items WHERE order_id = ?`,
         [orderId],
-        (err, rows) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(rows);
-          }
-        }
+        
       );
     });
 

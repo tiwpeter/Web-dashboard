@@ -1,12 +1,54 @@
 import { NextResponse } from 'next/server';
 import { getDBConnection } from '../../lib/db';
 
+// Define types for the product and grouped product
+type Product = {
+  product_id: number;
+  product_name: string;
+  price: number;
+  category_id: number;
+  sale_percent: number | null;
+  discount_end_time: string | null;
+  rating: number;
+  sold: number;
+  created_at: string;
+  stock: number;
+  category_name: string;
+  option_id: number | null;
+  option_type: string | null;
+  option_name: string | null;
+  option_price: number | null;
+  option_image_url: string | null;
+  product_image_url: string | null;
+};
+
+type GroupedProduct = {
+  product_id: number;
+  product_name: string;
+  price: number;
+  sale_percent: number | null;
+  discount_end_time: string | null;
+  rating: number;
+  sold: number;
+  created_at: string;
+  stock: number;
+  category_name: string;
+  options: Array<{
+    option_id: number;
+    option_type: string;
+    option_name: string;
+    option_price: number;
+    image_url: string | null;
+  }>;
+  product_images: string[];
+};
+
 export async function GET() {
   try {
     const db = await getDBConnection();
 
     // Query to join products, product_options, product_images, and categories, and add created_at and stock
-    const products = await db.all(`
+    const products: Product[] = await db.all(`
       SELECT 
         p.id AS product_id,
         p.name AS product_name,
@@ -33,7 +75,7 @@ export async function GET() {
     `);
 
     // Grouping logic by category
-    const groupedProducts = products.reduce((acc, product) => {
+    const groupedProducts = products.reduce((acc: { [key: string]: GroupedProduct[] }, product) => {
       const category = product.category_name; // Adjusted to use category_name
       if (!acc[category]) {
         acc[category] = [];
@@ -46,10 +88,10 @@ export async function GET() {
         if (product.option_id) {
           existingProduct.options.push({
             option_id: product.option_id,
-            option_type: product.option_type,
-            option_name: product.option_name,
-            option_price: product.option_price,
-            image_url: product.option_image_url
+            option_type: product.option_type || '',
+            option_name: product.option_name || '',
+            option_price: product.option_price || 0,
+            image_url: product.option_image_url || ''
           });
         }
 
@@ -72,10 +114,10 @@ export async function GET() {
           category_name: product.category_name,
           options: product.option_id ? [{
             option_id: product.option_id,
-            option_type: product.option_type,
-            option_name: product.option_name,
-            option_price: product.option_price,
-            image_url: product.option_image_url
+            option_type: product.option_type || '',
+            option_name: product.option_name || '',
+            option_price: product.option_price || 0,
+            image_url: product.option_image_url || ''
           }] : [],
           product_images: product.product_image_url ? [product.product_image_url] : []
         });
@@ -93,4 +135,3 @@ export async function GET() {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

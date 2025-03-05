@@ -1,11 +1,45 @@
 import { NextResponse } from "next/server";
 import { getDBConnection } from "../../lib/db"; // Adjust the path as necessary
+import { NextRequest } from "next/server"; // Import NextRequest
 
-export async function POST(request) {
+type GroupedOrder = {
+  order_id: number;
+  user_email: string;
+  total_price: number;
+  shipping_address: string;
+  phone: string;
+  payment_method: string;
+  created_at: string;
+  items: {
+    order_item_id: number;
+    product_id: number;
+    product_name: string;
+    product_price: number;
+    product_quantity: number;
+  }[];
+  total_quantity: number;
+  calculated_total: number;
+};
+
+type OrderRow = {
+  order_id: number;
+  user_email: string;
+  total_price: number;
+  shipping_address: string;
+  phone: string;
+  payment_method: string;
+  created_at: string;
+  order_item_id: number;
+  product_id: number;
+  product_name: string;
+  product_price: number;
+  product_quantity: number;
+};
+
+export async function POST(request: NextRequest) { // Type the request as NextRequest
   let db;
   try {
     db = await getDBConnection();
-
 
     // Start a transaction
     await db.run("BEGIN");
@@ -20,39 +54,38 @@ export async function POST(request) {
     console.log("Cart:", cart);
     // เพิ่มข้อมูลลงในตาราง orders กับ shippingInfo
     const result = await db.run(
-  `INSERT INTO orders (user_email, total_price, shipping_address, phone, payment_method)
-   VALUES (?, ?, ?, ?, ?)`,
-  [
-    shippingInfo.name,                    // Assuming `name` is the user email or the user's name
-    totalPrice,                            // Make sure you're passing the calculated total price here
-    fullAddress,         // Shipping address
-    shippingInfo.phone,                    // Phone number
-    cardInfo.payment_method                // Payment method (you might need to adjust this)
-  ]
-);
+      `INSERT INTO orders (user_email, total_price, shipping_address, phone, payment_method)
+       VALUES (?, ?, ?, ?, ?)`,
+
+      [
+        shippingInfo.name,                    // Assuming `name` is the user email or the user's name
+        totalPrice,                            // Make sure you're passing the calculated total price here
+        fullAddress,         // Shipping address
+        shippingInfo.phone,                    // Phone number
+        cardInfo.payment_method                // Payment method (you might need to adjust this)
+      ]
+    );
 
     const orderId = result.lastID; // ดึง ID คำสั่งซื้อ
 
-// เพิ่มสินค้าในคำสั่งซื้อลงในตาราง order_items
+    // เพิ่มสินค้าในคำสั่งซื้อลงในตาราง order_items
     for (const item of cart) {
-  await db.run(
-    `INSERT INTO order_items (order_id, product_id, quantity, price, name) 
-     VALUES (?, ?, ?, ?, ?)`, // Added `name` here
-    [orderId, item.id, item.quantity, item.price, item.name] // Adding the product name
-  );
-}
-
+      await db.run(
+        `INSERT INTO order_items (order_id, product_id, quantity, price, name) 
+         VALUES (?, ?, ?, ?, ?)`, // Added `name` here
+        [orderId, item.id, item.quantity, item.price, item.name] // Adding the product name
+      );
+    }
 
     await db.run("COMMIT"); // บันทึกธุรกรรม
 
     return NextResponse.json({ message: "Order placed successfully" }, { status: 201 });
   } catch (error) {
-
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({  }, { status: 500 });
   }
 }
 
-export async function GET(request) {
+export async function GET(request: NextRequest) { // Type the request as NextRequest
   let db;
   try {
     db = await getDBConnection();
@@ -76,10 +109,10 @@ export async function GET(request) {
       LEFT JOIN order_items oi ON o.id = oi.order_id
     `;
 
-    const orders = await db.all(ordersQuery); // Fetch the orders with their items
+    const orders: OrderRow[] = await db.all(ordersQuery); // Fetch the orders with their items
 
     // Group orders with their respective items and calculate the total price for each order
-    const groupedOrders = orders.reduce((acc, row) => {
+    const groupedOrders = orders.reduce<{ [key: number]: GroupedOrder }>((acc, row) => {
       const orderId = row.order_id;
       if (!acc[orderId]) {
         acc[orderId] = {
@@ -119,9 +152,6 @@ export async function GET(request) {
     return NextResponse.json(responseOrders, { status: 200 });
 
   } catch (error) {
-    console.error("🔥 Error:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({  }, { status: 500 });
   }
 }
-
-

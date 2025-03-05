@@ -1,11 +1,19 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+interface Product {
+  product_id: number;
+  product_name: string;
+  created_at: string;
+  price: number;
+  stock: number;
+  product_images: string[];
+}
 
 export default function Order() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]); // Specify the type here
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6; // แสดงแค่ 6 รายการต่อหน้า
+  const itemsPerPage = 6;
   const router = useRouter();
 
   useEffect(() => {
@@ -18,7 +26,6 @@ export default function Order() {
         const data = await response.json();
         console.log("Fetched data:", data);
 
-        // แปลง array ซ้อนให้อยู่ในรูปแบบ array เดียว
         const flattenedData = data.flat();
         setProducts(flattenedData);
       } catch (error) {
@@ -29,10 +36,8 @@ export default function Order() {
     fetchData();
   }, []);
 
-  // คำนวณจำนวนหน้าทั้งหมด
   const totalPages = Math.ceil(products.length / itemsPerPage);
 
-  // ตัดข้อมูลเฉพาะหน้าปัจจุบัน
   const displayedProducts = products.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -119,9 +124,7 @@ export default function Order() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="text-center py-4">
-                    No products found.
-                  </td>
+                  <td className="text-center py-4">No products found.</td>
                 </tr>
               )}
             </tbody>

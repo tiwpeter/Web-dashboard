@@ -21,8 +21,15 @@ ChartJS.register(
   Legend
 );
 
+// Define types for the order data
+type Order = {
+  order_date: string;
+  revenue: number;
+  total_sale: number;
+};
+
 export default function BarChartComponent() {
-  const [ordersData, setOrdersData] = useState([]);
+  const [ordersData, setOrdersData] = useState<Order[]>([]); // State for orders data
   const [timePeriod, setTimePeriod] = useState("day"); // State for selected time period
 
   useEffect(() => {
@@ -41,17 +48,19 @@ export default function BarChartComponent() {
   }, []);
 
   // Function to group the data based on the selected time period
-  const groupByTimePeriod = (orders, period) => {
-    const groupedData = {};
+  const groupByTimePeriod = (orders: Order[], period: string) => {
+    const groupedData: {
+      [key: string]: { revenue: number; total_sale: number };
+    } = {};
 
     orders.forEach((order) => {
       const orderDate = new Date(order.order_date);
-      let label;
+      let label: string = ""; // Initialize label with an empty string
 
       if (period === "day") {
         label = orderDate.toLocaleDateString(); // Group by day
       } else if (period === "week") {
-        // Group by weekday (Mon, Tue, Wed, ...)
+        // Group by weekday (Mon, Tue, Wed, ... in Thai)
         const daysOfWeek = [
           "อาทิตย์",
           "จันทร์",

@@ -13,9 +13,10 @@ type Category = {
   parent_category: string | null;
 };
 
-export async function GET(req: NextRequest, { params }: { params: Params }) {  // Annotate params
+export async function GET(request : Request, context:any) {
+
   const db = await getDBConnection();
-  const { parent_name } = params;
+  const { parent_name } = context;
 
   try {
     const categories: Category[] = await db.all(

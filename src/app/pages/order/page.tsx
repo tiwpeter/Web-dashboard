@@ -2,8 +2,18 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+interface Order {
+  order_id: string;
+  created_at: string;
+  user_email: string;
+  payment_method: string;
+  total_price: number;
+  total_quantity: number;
+  status: string;
+}
+
 const OrderList = () => {
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState<Order[]>([]); // Use Order[] instead of an empty array
   const router = useRouter();
 
   useEffect(() => {
@@ -20,7 +30,7 @@ const OrderList = () => {
 
     fetchOrders();
   }, []);
-  const detectCardType = (cardNumber) => {
+  const detectCardType = (cardNumber: string) => {
     const cleanedCardNumber = cardNumber.replace(/-/g, "");
 
     const visaRegex = /^4[0-9]{12,15}$/;
@@ -41,7 +51,8 @@ const OrderList = () => {
     }
   };
 
-  const getCardImage = (cardType) => {
+  // Explicitly type cardType as string and cardNumber as string
+  const getCardImage = (cardType: string): string => {
     switch (cardType) {
       case "Visa":
         return "/card-logos/VISA.png"; // Path to the Visa card image
@@ -56,7 +67,7 @@ const OrderList = () => {
     }
   };
 
-  const censorCardNumber = (cardNumber) => {
+  const censorCardNumber = (cardNumber: string): string => {
     if (!cardNumber) return "**** **** **** ****"; // Check if cardNumber is null or undefined
     const last4Digits = cardNumber.slice(-4); // Get the last 4 digits
     return `**** **** **** ${last4Digits}`; // Replace the first part with ****

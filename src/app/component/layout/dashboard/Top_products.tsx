@@ -1,8 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
 
+// Define the Product type
+type Product = {
+  product_name: string;
+  total_sales: number;
+  total_quantity: number;
+};
+
 export default function Top_products() {
-  const [topSellingProducts, setTopSellingProducts] = useState([]);
+  // Use the Product type in useState
+  const [topSellingProducts, setTopSellingProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     async function fetchTopSellingProducts() {

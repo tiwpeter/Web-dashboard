@@ -1,44 +1,10 @@
 "use client";
 
 import BarChartComponent from "./bar";
-import LineChart from "./line";
 import PieChartComponent from "./PieChartComponent ";
 import Top_products from "./Top_products";
 
 const DashBoardLayout = () => {
-  const calculateChange = (value, change) => {
-    const numberMatch = value.match(/[\d,.]+/); // Extract numbers like "$3.5M" → "3.5"
-    const percentageMatch = change.match(/-?\d+(\.\d+)?/); // Extract percentage like "-2%" → "-2"
-
-    if (!numberMatch || !percentageMatch) return "N/A";
-
-    let baseValue = parseFloat(numberMatch[0].replace(",", "")); // Remove commas from number
-
-    // Convert value to "K" if over 1000
-    if (baseValue >= 1000 && baseValue < 1000000) {
-      baseValue /= 1000;
-      value = value.replace(numberMatch[0], baseValue.toFixed(1) + "K");
-    }
-
-    if (value.includes("M")) baseValue *= 1_000_000;
-    if (value.includes("K")) baseValue *= 1_000;
-
-    const percentage = parseFloat(percentageMatch[0]) / 100;
-    const result = baseValue * percentage;
-
-    // Handle negative values
-    if (result < 0) {
-      return `-${Math.abs(result / 1000).toFixed(0)}K`; // Show negative in "K" (e.g., "-70K")
-    }
-
-    // Append 'K' if the result exceeds 1000
-    if (result >= 1000 && result < 1000000) {
-      return (result / 1000).toFixed(0) + "K"; // Display "10K" instead of "10k"
-    }
-
-    return result.toLocaleString(undefined, { maximumFractionDigits: 2 });
-  };
-
   const statsData = [
     {
       title: "Total Sales",

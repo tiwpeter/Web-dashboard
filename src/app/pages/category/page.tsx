@@ -2,18 +2,31 @@
 
 import { useEffect, useState } from "react";
 
+// Define types for category and parent
+interface Parent {
+  id: number;
+  parent_name: string;
+  parent_image_url: string;
+}
+
+interface Category {
+  id: number;
+  category_name: string;
+  parent_id: number;
+}
+
 export default function CategoryPage() {
-  const [categories, setCategories] = useState([]);
-  const [parents, setParents] = useState([]);
+  const [categories, setCategories] = useState<Category[]>([]); // Typing for categories
+  const [parents, setParents] = useState<Parent[]>([]); // Typing for parents
 
   useEffect(() => {
-    // ดึงข้อมูลจาก API categories
+    // Fetch categories
     fetch("http://localhost:3001/api/type/category")
       .then((res) => res.json())
       .then((data) => setCategories(data))
       .catch((err) => console.error("Error fetching categories:", err));
 
-    // ดึงข้อมูลจาก API parents
+    // Fetch parents
     fetch("http://localhost:3001/api/type/parents")
       .then((res) => res.json())
       .then((data) => {
@@ -23,16 +36,20 @@ export default function CategoryPage() {
       .catch((err) => console.error("Error fetching parents:", err));
   }, []);
 
-  // รวมข้อมูล category และ parent
+  // Combine category and parent data
   const combinedData = categories.map((category) => {
     const parentData =
-      parents.find((p) => Number(p.id) === Number(category.parent_id)) || {};
+      parents.find((p) => Number(p.id) === Number(category.parent_id)) || {}; // Assign an empty object if no match
+
+    // TypeScript expects parentData to be of type Parent, so we ensure it is either Parent or an empty object.
+    const { parent_image_url = "No Image", parent_name = "No Parent" } =
+      parentData as Parent;
 
     return {
       title: category.category_name,
       id: category.id,
-      media: parentData.parent_image_url || "No Image",
-      parent: parentData.parent_name || "No Parent",
+      media: parent_image_url,
+      parent: parent_name,
     };
   });
 
@@ -49,10 +66,9 @@ export default function CategoryPage() {
             </a>
           </div>
         </div>
-        {/* search */}
+        {/* Search */}
         <div className="flex items-center space-x-4 mb-4">
           <div className="relative flex-1">
-            {/* Icon for search (magnifying glass) */}
             <span className="absolute inset-y-0 left-3 flex items-center pl-2 text-gray-500 dark:text-white">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -140,10 +156,7 @@ export default function CategoryPage() {
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan="4"
-                    className="px-4 py-2 border border-gray-300 text-center"
-                  >
+                  <td className="px-4 py-2 border border-gray-300 text-center">
                     No Data Available
                   </td>
                 </tr>

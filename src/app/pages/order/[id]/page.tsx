@@ -3,10 +3,26 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation"; // ใช้ useParams แทน useRouter
 import { FaCcVisa, FaCcMastercard, FaCcAmex } from "react-icons/fa"; // นำเข้าไอคอน
 
+// Define the type for order item
+interface OrderItem {
+  product_name: string;
+  product_quantity: number;
+  product_price: number;
+}
+
+interface Order {
+  order_id: string;
+  created_at: string;
+  payment_method: string;
+  user_email: string;
+  phone: string;
+  items: OrderItem[];
+}
+
 const OrderDetails = () => {
   const { id } = useParams(); // อ่านค่าจาก URL สำหรับ product id
-  const [order, setOrder] = useState(null);
-  const [error, setError] = useState(null);
+  const [order, setOrder] = useState<Order | null>(null); // Explicitly type the state
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true); // สร้าง state สำหรับ loading
 
   // ดึงข้อมูลคำสั่งซื้อ
@@ -32,7 +48,7 @@ const OrderDetails = () => {
         }
       } catch (error) {
         console.error("Error fetching product:", error);
-        setError(error.message || "Failed to fetch data");
+        setError("Failed to fetch data");
         setOrder(null); // กำหนดเป็น null เมื่อเกิดข้อผิดพลาด
       } finally {
         setLoading(false); // เปลี่ยนสถานะ loading เป็น false เมื่อดึงข้อมูลเสร็จ
@@ -43,18 +59,18 @@ const OrderDetails = () => {
   }, [id]);
 
   // คำนวณ totalPrice
-  const totalPrice = order?.items.reduce((total, item) => {
+  const totalPrice = order?.items.reduce<number>((total, item) => {
     return total + item.product_quantity * item.product_price;
   }, 0);
 
   // คำนวณ taxAmount และ finalTotal
   const shippingCost = 20.0; // Example shipping cost
   const taxRate = 0.1; // 10% tax rate
-  const taxAmount = totalPrice * taxRate;
-  const finalTotal = totalPrice + shippingCost + taxAmount;
+  const taxAmount = totalPrice ? totalPrice * taxRate : 0;
+  const finalTotal = totalPrice ? totalPrice + shippingCost + taxAmount : 0;
 
   // เลือกไอคอนบัตรเครดิตตามประเภท
-  const renderCardIcon = (type) => {
+  const renderCardIcon = (type: string) => {
     switch (type) {
       case "Visa":
         return <FaCcVisa className="text-blue-600 text-2xl" />;
@@ -67,7 +83,7 @@ const OrderDetails = () => {
     }
   };
 
-  const detectCardType = (cardNumber) => {
+  const detectCardType = (cardNumber: string) => {
     const cleanedCardNumber = cardNumber.replace(/-/g, "");
 
     const visaRegex = /^4[0-9]{12,15}$/;
@@ -88,13 +104,13 @@ const OrderDetails = () => {
     }
   };
 
-  const censorCardNumber = (cardNumber) => {
+  const censorCardNumber = (cardNumber: string) => {
     if (!cardNumber) return "**** **** **** ****"; // Check if cardNumber is null or undefined
     const last4Digits = cardNumber.slice(-4); // Get the last 4 digits
     return `**** **** **** ${last4Digits}`; // Replace the first part with ****
   };
 
-  const getCardImage = (cardType) => {
+  const getCardImage = (cardType: string) => {
     switch (cardType) {
       case "Visa Card":
         return "/card-logos/VISA.png"; // Path to the Visa card image
@@ -230,7 +246,7 @@ const OrderDetails = () => {
           <div className="mt-4">
             <div className="flex justify-between text-sm">
               <span>Subtotal</span>
-              <span>${totalPrice.toFixed(2)}</span>
+              <span>${totalPrice?.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm mt-2">
               <span>Shipping</span>
