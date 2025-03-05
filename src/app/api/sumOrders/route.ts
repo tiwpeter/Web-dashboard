@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { getDBConnection } from "../../lib/db"; // Adjust path as needed
 
-export async function GET(request) {
+// กำหนดประเภทของ timePeriod
+type TimePeriod = "day" | "week" | "month";
+
+export async function GET(request: Request) {
   try {
     const db = await getDBConnection(); // Connect to SQLite database
 
@@ -23,14 +26,15 @@ export async function GET(request) {
 
     return NextResponse.json(responseOrders, { status: 200 });
   } catch (error) {
-    console.error("🔥 Error:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("🔥 Error:");
+    return NextResponse.json({ }, { status: 500 });
   }
 }
-export async function POST(request) {
+
+export async function POST(request: Request) {
   try {
     const db = await getDBConnection();
-    const { timePeriod } = await request.json(); // รับค่า timePeriod จาก body
+    const { timePeriod }: { timePeriod: TimePeriod } = await request.json(); // รับค่า timePeriod จาก body
 
     let groupByClause = "";
     let orderByClause = "o.created_at DESC";
@@ -64,7 +68,7 @@ export async function POST(request) {
 
     return NextResponse.json(responseOrders, { status: 200 });
   } catch (error) {
-    console.error("🔥 Error:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("🔥 Error:", );
+    return NextResponse.json({   }, { status: 500 });
   }
 }

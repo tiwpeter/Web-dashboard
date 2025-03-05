@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server'; // นำเข้า NextResponse
+import { NextResponse, NextRequest } from 'next/server'; // นำเข้า NextResponse และ NextRequest
 import { getDBConnection } from '../../../lib/db';
 
-export async function POST(req) {
+export async function POST(req: NextRequest) {  // Explicitly type 'req' as 'NextRequest'
   const db = await getDBConnection();
 
   try {
@@ -36,7 +36,6 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Database error' }, { status: 500 });
   }
 }
-
 
 
 // Handle GET requests for categories (Get all categories)

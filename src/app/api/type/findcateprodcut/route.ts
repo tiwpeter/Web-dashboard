@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'; // Import NextRequest
 import { getDBConnection } from '../../../lib/db';
 
-export async function GET(req) {
+export async function GET(req: NextRequest) {  // Add the type annotation for 'req'
   const db = await getDBConnection();
   
   // รับค่า category_id จาก query string
@@ -31,7 +31,6 @@ export async function GET(req) {
    WHERE p.category_id = ?;`, 
   [categoryId]
 );
-
 
     return NextResponse.json(products, { status: 200 });
   } catch (error) {

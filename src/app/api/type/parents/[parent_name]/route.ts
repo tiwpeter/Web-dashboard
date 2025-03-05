@@ -1,13 +1,24 @@
-// แสดง cate รวมถึง product
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getDBConnection } from '../../../../lib/db';
 
-export async function GET(req, { params }) {
+// Define the type for the params object
+type Params = {
+  parent_name: string;
+};
+
+// Define the type for a Category
+type Category = {
+  id: number;
+  category_name: string;
+  parent_category: string | null;
+};
+
+export async function GET(req: NextRequest, { params }: { params: Params }) {  // Annotate params
   const db = await getDBConnection();
   const { parent_name } = params;
 
   try {
-    const categories = await db.all(
+    const categories: Category[] = await db.all(
       `SELECT c.id, c.name AS category_name, p.parent_name AS parent_category
        FROM categories c
        LEFT JOIN parents p ON c.parent_id = p.id
@@ -19,20 +30,19 @@ export async function GET(req, { params }) {
       return NextResponse.json({ error: "No categories found" }, { status: 404 });
     }
 
-    const categoryIds = categories.map((c) => c.id);
+    const categoryIds = categories.map((c: Category) => c.id);  // Specify the type of 'c'
     const placeholders = categoryIds.map(() => "?").join(",");
 
     const products =
       categoryIds.length > 0
-  ? await db.all(
-      `SELECT p.id, p.name, p.price, p.category_id,
-              (SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id LIMIT 1) AS product_image
-       FROM products p
-       WHERE p.category_id IN (${placeholders});`,
-      categoryIds
-    )
-  : [];
-
+        ? await db.all(
+            `SELECT p.id, p.name, p.price, p.category_id,
+                    (SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id LIMIT 1) AS product_image
+             FROM products p
+             WHERE p.category_id IN (${placeholders});`,
+            categoryIds
+          )
+        : [];
 
     return NextResponse.json({ parent_name, categories, products }, { status: 200 });
   } catch (error) {

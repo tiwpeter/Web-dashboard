@@ -1,9 +1,12 @@
-// app/api/type/category/[id]/route.js
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'; // Import NextRequest
 import { getDBConnection } from '../../../../lib/db';
 
-export async function GET(req, { params }) {
-  const { id } = params; // รับค่า category_id จาก params
+interface Params {
+  id: string; // Define the type of the `id` parameter (assuming it’s a string)
+}
+
+export async function GET(req: NextRequest, { params }: { params: Params }) {
+  const { id } = params; // Access the category_id from params
   
   if (!id) {
     return NextResponse.json({ error: "category_id is required" }, { status: 400 });

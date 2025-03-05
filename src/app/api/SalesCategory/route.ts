@@ -1,11 +1,17 @@
-import { NextResponse } from 'next/server';
-import { getDBConnection } from '../../lib/db';
+import { NextResponse } from "next/server";
+import { getDBConnection } from "../../lib/db";
+
+// กำหนดประเภทสำหรับข้อมูลที่ดึงจากฐานข้อมูล
+type SalesByCategory = {
+  category_name: string;
+  total_sales: number;
+};
 
 export async function GET() {
   const db = await getDBConnection();
   try {
     // ดึงข้อมูลยอดขายตามหมวดหมู่สินค้า
-    const salesByCategory = await db.all(`
+    const salesByCategory: SalesByCategory[] = await db.all(`
       SELECT 
           c.name AS category_name,
           SUM(oi.quantity * oi.price) AS total_sales
@@ -28,12 +34,12 @@ export async function GET() {
     const totalSales = totalSalesResult.total_sales || 0;
 
     // คำนวณส่วนแบ่งยอดขายของแต่ละหมวดหมู่
-    const salesShareByCategory = salesByCategory.map((category) => {
+    const salesShareByCategory = salesByCategory.map((category: SalesByCategory) => {
       const salesSharePercentage = totalSales ? (category.total_sales / totalSales) * 100 : 0;
       return {
         category_name: category.category_name,
         total_sales: category.total_sales,
-        sales_share_percentage: salesSharePercentage.toFixed(2)  // ส่วนแบ่งยอดขายเป็นเปอร์เซ็นต์
+        sales_share_percentage: salesSharePercentage.toFixed(2), // ส่วนแบ่งยอดขายเป็นเปอร์เซ็นต์
       };
     });
 
@@ -42,8 +48,10 @@ export async function GET() {
     return response;
   } catch (error) {
     console.error("Error fetching sales share by category:", error);
-    const response = NextResponse.json({ error: 'Failed to fetch sales share by category' }, { status: 500 });
+    const response = NextResponse.json(
+      { error: "Failed to fetch sales share by category" },
+      { status: 500 }
+    );
     return response;
   }
 }
-//sales_share_percentage

@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDBConnection } from '../../../lib/db';
 
 // Handle GET requests for categories (Get all categories)
-export async function GET(req) {
+export async function GET(req: NextRequest) {
   const db = await getDBConnection();
 
   try {
@@ -22,7 +22,7 @@ export async function GET(req) {
 }
 
 // Handle POST requests for creating a new category
-export async function POST(req) {
+export async function POST(req: NextRequest) {
   const db = await getDBConnection();
   const { category_name, parent_id } = await req.json();
 

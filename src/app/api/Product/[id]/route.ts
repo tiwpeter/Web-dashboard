@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getDBConnection } from "../../../lib/db";
 
-export async function GET(request, { params }) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   const db = await getDBConnection();
-  const { id } = await params; // เพิ่ม await ที่นี่
+  const { id } = params; // ❌ ไม่ต้องใช้ await
 
   try {
     // 1️⃣ ดึงข้อมูลสินค้า
@@ -13,13 +13,12 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    // 2️⃣ ดึงข้อมูล category_name จากตาราง categories (ใช้ category_id ที่อยู่ใน product)
+    // 2️⃣ ดึงข้อมูล category_name จากตาราง categories
     const category = await db.get(
-      "SELECT name FROM categories WHERE id = ?", // เปลี่ยนเป็นคอลัมน์ name
-      [product.category_id] // ใช้ category_id ที่อยู่ใน product
+      "SELECT name FROM categories WHERE id = ?",
+      [product.category_id]
     );
 
-    // ถ้าไม่พบ category ให้คืน error
     if (!category) {
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
@@ -30,16 +29,16 @@ export async function GET(request, { params }) {
       [id]
     );
 
-    // 4️⃣ ดึงข้อมูลตัวเลือกสินค้าโดยตรงจาก options (ไม่ใช้ JOIN)
+    // 4️⃣ ดึงข้อมูลตัวเลือกสินค้า
     const options = await db.all(
       `SELECT id, option_type_name, option_name, option_price, image_url 
        FROM options 
-       WHERE id IN (SELECT option_id FROM product_options WHERE product_id = ?)`,
+       WHERE id IN (SELECT option_id FROM product_options WHERE product_id = ?);`,
       [id]
     );
 
-    // 5️⃣ จัดกลุ่มตัวเลือกสินค้า (option_type_name) และจัดการข้อมูลตัวเลือก
-    const optionsGrouped = options.reduce((acc, opt) => {
+    // 5️⃣ จัดกลุ่มตัวเลือกสินค้า
+    const optionsGrouped = options.reduce((acc: any, opt: any) => {
       const { option_type_name, option_name, option_price, image_url } = opt;
 
       if (!acc[option_type_name]) {
@@ -50,8 +49,8 @@ export async function GET(request, { params }) {
       }
 
       acc[option_type_name].options.push({
-        option_name: option_name,
-        option_price: option_price,
+        option_name,
+        option_price,
         image_urls: image_url ? [image_url] : [],
       });
 
@@ -61,8 +60,8 @@ export async function GET(request, { params }) {
     // 6️⃣ รวมข้อมูลทั้งหมด
     const productData = {
       ...product,
-      category_name: category.name, // ใช้ category.name แทน category_name
-      images: productImages.map((img) => img.image_url),
+      category_name: category.name,
+      images: productImages.map((img: any) => img.image_url),
       options: Object.values(optionsGrouped),
     };
 

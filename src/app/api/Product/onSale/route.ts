@@ -1,11 +1,19 @@
-// /api/products/onSale.js
-import { getDBConnection } from '../../../lib/db';
-import { NextResponse } from 'next/server';
+import { getDBConnection } from "../../../lib/db";
+import { NextResponse } from "next/server";
+
+// กำหนด Type สำหรับ Product
+type Product = {
+  id: number;
+  name: string;
+  price: number;
+  category_id: number;
+  sale_percent: number;
+  image_urls?: string; // อาจเป็น string หรือ undefined (GROUP_CONCAT)
+};
 
 export async function GET() {
-  let db;
   try {
-    db = await getDBConnection();
+    const db = await getDBConnection();
 
     // ดึงสินค้าที่ลดราคาพร้อมรูปภาพ
     const query = `
@@ -17,25 +25,24 @@ export async function GET() {
       GROUP BY p.id
     `;
 
-    const products = await db.all(query);
+    const products: Product[] = await db.all(query);
 
-    if (products.length === 0) {
-      return NextResponse.json({ error: 'No products with discount found' }, { status: 404 });
+    if (!products || products.length === 0) {
+      return NextResponse.json({ error: "No products with discount found" }, { status: 404 });
     }
 
     // แปลง image_urls จาก string เป็น array
-    const formattedProducts = products.map(product => ({
+    const formattedProducts = products.map((product: Product) => ({
       ...product,
-      image_urls: product.image_urls ? product.image_urls.split(',') : []
+      image_urls: product.image_urls ? product.image_urls.split(",") : [],
     }));
 
     return NextResponse.json({ products: formattedProducts }, { status: 200 });
-
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
-  } finally {
-    if (db) {
-    }
+  } catch (error: any) {
+    console.error("Error fetching products:", error);
+    return NextResponse.json(
+      { error: "Internal server error", details: error.message },
+      { status: 500 }
+    );
   }
 }
