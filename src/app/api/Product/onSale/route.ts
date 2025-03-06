@@ -8,24 +8,25 @@ type Product = {
   price: number;
   category_id: number;
   sale_percent: number;
-  image_urls?: string; // อาจเป็น string หรือ undefined (GROUP_CONCAT)
+  image_urls?: string; // อาจเป็น string หรือ undefined (STRING_AGG)
 };
 
 export async function GET() {
   try {
     const db = await getDBConnection();
 
-    // ดึงสินค้าที่ลดราคาพร้อมรูปภาพ
+    // ดึงสินค้าที่ลดราคาพร้อมรูปภาพ (ใช้ STRING_AGG แทน GROUP_CONCAT)
     const query = `
       SELECT p.*, 
-             GROUP_CONCAT(pi.image_url) AS image_urls
+             STRING_AGG(pi.image_url, ',') AS image_urls
       FROM products p
       LEFT JOIN product_images pi ON p.id = pi.product_id
       WHERE p.sale_percent > 0
       GROUP BY p.id
     `;
 
-    const products: Product[] = await db.all(query);
+    const result = await db.query(query);
+    const products: Product[] = result.rows; // ใช้ rows แทน
 
     if (!products || products.length === 0) {
       return NextResponse.json({ error: "No products with discount found" }, { status: 404 });

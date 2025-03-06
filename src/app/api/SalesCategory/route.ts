@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDBConnection } from "../../lib/db";
+import { getDBConnection } from "../../lib/db"; // ปรับให้ใช้ PostgreSQL
 
 // กำหนดประเภทสำหรับข้อมูลที่ดึงจากฐานข้อมูล
 type SalesByCategory = {
@@ -8,10 +8,10 @@ type SalesByCategory = {
 };
 
 export async function GET() {
-  const db = await getDBConnection();
+  const client = await getDBConnection(); // เชื่อมต่อกับฐานข้อมูล PostgreSQL
   try {
     // ดึงข้อมูลยอดขายตามหมวดหมู่สินค้า
-    const salesByCategory: SalesByCategory[] = await db.all(`
+    const result = await client.query<SalesByCategory>(`
       SELECT 
           c.name AS category_name,
           SUM(oi.quantity * oi.price) AS total_sales
@@ -25,13 +25,15 @@ export async function GET() {
           c.id
     `);
 
+    const salesByCategory: SalesByCategory[] = result.rows;
+
     // คำนวณยอดขายรวมทั้งหมด
-    const totalSalesResult = await db.get(`
+    const totalSalesResult = await client.query(`
       SELECT SUM(quantity * price) AS total_sales
       FROM order_items
     `);
 
-    const totalSales = totalSalesResult.total_sales || 0;
+    const totalSales = totalSalesResult.rows[0].total_sales || 0;
 
     // คำนวณส่วนแบ่งยอดขายของแต่ละหมวดหมู่
     const salesShareByCategory = salesByCategory.map((category: SalesByCategory) => {
@@ -44,14 +46,14 @@ export async function GET() {
     });
 
     // ส่งข้อมูลกลับในรูปแบบ JSON
-    const response = NextResponse.json(salesShareByCategory);
-    return response;
+    return NextResponse.json(salesShareByCategory);
   } catch (error) {
     console.error("Error fetching sales share by category:", error);
-    const response = NextResponse.json(
+    return NextResponse.json(
       { error: "Failed to fetch sales share by category" },
       { status: 500 }
     );
-    return response;
+  } finally {
+    // ปิดการเชื่อมต่อฐานข้อมูลเมื่อเสร็จสิ้น
   }
 }

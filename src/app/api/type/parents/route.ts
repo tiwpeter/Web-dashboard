@@ -1,15 +1,15 @@
-import { NextResponse, NextRequest } from 'next/server'; // นำเข้า NextResponse และ NextRequest
-import { getDBConnection } from '../../../lib/db';
+import { NextResponse, NextRequest } from "next/server";
+import { getDBConnection } from "../../../lib/db";
 
-export async function POST(req: NextRequest) {  // Explicitly type 'req' as 'NextRequest'
+export async function POST(req: NextRequest) {
   const db = await getDBConnection();
 
   try {
     const body = await req.json();
-    console.log("📥 Received JSON:", body); // แสดงข้อมูลที่ได้รับจาก request body
+    console.log("📥 Received JSON:", body);
 
     if (!Array.isArray(body)) {
-      return NextResponse.json({ error: 'Request body must be an array' }, { status: 400 });
+      return NextResponse.json({ error: "Request body must be an array" }, { status: 400 });
     }
 
     const insertedData = [];
@@ -18,36 +18,34 @@ export async function POST(req: NextRequest) {  // Explicitly type 'req' as 'Nex
       const { parent_name, parent_image_url } = item;
 
       if (!parent_name) {
-        return NextResponse.json({ error: 'parent_name is required' }, { status: 400 });
+        return NextResponse.json({ error: "parent_name is required" }, { status: 400 });
       }
 
-      const result = await db.run(
-        `INSERT INTO parents (parent_name, parent_image_url) VALUES (?, ?)`,
+      const result = await db.query(
+        `INSERT INTO parents (parent_name, parent_image_url) 
+         VALUES ($1, $2) RETURNING id, parent_name, parent_image_url`,
         [parent_name, parent_image_url || null]
       );
 
-      insertedData.push({ id: result.lastID, parent_name, parent_image_url });
+      insertedData.push(result.rows[0]); // PostgreSQL ใช้ result.rows
     }
 
-    console.log("✅ Inserted Data:", insertedData); // แสดงข้อมูลที่บันทึก
+    console.log("✅ Inserted Data:", insertedData);
     return NextResponse.json({ message: "✅ Data inserted successfully!", insertedData }, { status: 201 });
   } catch (error) {
     console.error("❌ Database error:", error);
-    return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    return NextResponse.json({ error: "Database error" }, { status: 500 });
   }
 }
 
-
-// Handle GET requests for categories (Get all categories)
+// Handle GET requests for parents (Get all parents)
 export async function GET() {
   const db = await getDBConnection();
   try {
-    const categories = await db.all('SELECT * FROM parents');
-    const response = NextResponse.json(categories);
-    return response;
+    const result = await db.query("SELECT * FROM parents");
+    return NextResponse.json(result.rows);
   } catch (error) {
     console.error("Error fetching categories:", error);
-    const response = NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
-    return response;
+    return NextResponse.json({ error: "Failed to fetch categories" }, { status: 500 });
   }
 }

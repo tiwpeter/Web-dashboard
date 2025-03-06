@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
-import { getDBConnection } from "../../lib/db"; // Adjust path as needed
+import { getDBConnection } from "../../lib/db"; // ปรับให้ใช้ PostgreSQL
 
 // กำหนดประเภทของ timePeriod
 type TimePeriod = "day" | "week" | "month";
 
 export async function GET(request: Request) {
   try {
-    const db = await getDBConnection(); // Connect to SQLite database
+    const client = await getDBConnection(); // เชื่อมต่อกับฐานข้อมูล PostgreSQL
 
     // Query to calculate revenue and total_sale
-    const responseOrders = await db.all(`
+    const responseOrders = await client.query(`
       SELECT
         o.created_at AS order_date,
         SUM(o.total_price) AS revenue,
@@ -24,16 +24,16 @@ export async function GET(request: Request) {
         o.created_at DESC;
     `);
 
-    return NextResponse.json(responseOrders, { status: 200 });
+    return NextResponse.json(responseOrders.rows, { status: 200 });
   } catch (error) {
-    console.error("🔥 Error:");
-    return NextResponse.json({ }, { status: 500 });
+    console.error("🔥 Error:", error);
+    return NextResponse.json({}, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const db = await getDBConnection();
+    const client = await getDBConnection(); // เชื่อมต่อกับฐานข้อมูล PostgreSQL
     const { timePeriod }: { timePeriod: TimePeriod } = await request.json(); // รับค่า timePeriod จาก body
 
     let groupByClause = "";
@@ -41,17 +41,17 @@ export async function POST(request: Request) {
 
     // กำหนดเงื่อนไข GROUP BY ตามช่วงเวลา
     if (timePeriod === "day") {
-      groupByClause = "DATE(o.created_at)";
+      groupByClause = "DATE(o.created_at)"; // Group by day
     } else if (timePeriod === "week") {
-      groupByClause = "strftime('%W', o.created_at)"; // Group by week number
+      groupByClause = "DATE_TRUNC('week', o.created_at)"; // Group by week (PostgreSQL)
     } else if (timePeriod === "month") {
-      groupByClause = "strftime('%m-%Y', o.created_at)"; // Group by month
+      groupByClause = "DATE_TRUNC('month', o.created_at)"; // Group by month (PostgreSQL)
     } else {
       return NextResponse.json({ error: "Invalid time period" }, { status: 400 });
     }
 
-    // Query SQL
-    const responseOrders = await db.all(`
+    // Query SQL for PostgreSQL
+    const responseOrders = await client.query(`
       SELECT
         ${groupByClause} AS order_date,
         SUM(o.total_price) AS revenue,
@@ -66,9 +66,9 @@ export async function POST(request: Request) {
         ${orderByClause};
     `);
 
-    return NextResponse.json(responseOrders, { status: 200 });
+    return NextResponse.json(responseOrders.rows, { status: 200 });
   } catch (error) {
-    console.error("🔥 Error:", );
-    return NextResponse.json({   }, { status: 500 });
+    console.error("🔥 Error:", error);
+    return NextResponse.json({}, { status: 500 });
   }
 }

@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getDBConnection } from '../../lib/db';
+import { getDBConnection } from '../../lib/db';  // ให้แก้ไข path ตามที่เก็บไฟล์จริง
 
 export async function GET() {
-  const db = await getDBConnection();
+  const db = await getDBConnection();  // เชื่อมต่อกับ PostgreSQL database
   try {
     // ดึงข้อมูลสินค้าที่ขายดีที่สุด โดยใช้ยอดขายรวม (ยอดขาย = ราคา * จำนวนที่ขาย)
-    const topSellingProducts = await db.all(`
+    const result = await db.query(`
       SELECT 
           p.name AS product_name,
           SUM(oi.quantity) AS total_quantity,
@@ -15,19 +15,16 @@ export async function GET() {
       JOIN 
           products p ON oi.product_id = p.id
       GROUP BY 
-          oi.product_id
+          oi.product_id, p.name
       ORDER BY 
           total_sales DESC
-      LIMIT 10
+      LIMIT 10;
     `);
 
-    // ส่งข้อมูลสินค้าขายดีกลับในรูปแบบ JSON
-    const response = NextResponse.json(topSellingProducts);
-    return response;
+    // ส่งข้อมูลสินค้าขายดีในรูปแบบ JSON
+    return NextResponse.json(result.rows, { status: 200 });
   } catch (error) {
     console.error("Error fetching top selling products:", error);
-    const response = NextResponse.json({ error: 'Failed to fetch top selling products' }, { status: 500 });
-    return response;
+    return NextResponse.json({ error: 'Failed to fetch top selling products' }, { status: 500 });
   }
 }
-//ส่งข้อมูล 10 อันดับสินค้าขายดีที่สุดในรูปแบบ JSON เพื่อใช้แสดงผลบน Frontend

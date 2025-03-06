@@ -48,7 +48,7 @@ export async function GET() {
     const db = await getDBConnection();
 
     // Query to join products, product_options, product_images, and categories, and add created_at and stock
-    const products: Product[] = await db.all(`
+    const result = await db.query(`
       SELECT 
         p.id AS product_id,
         p.name AS product_name,
@@ -73,6 +73,9 @@ export async function GET() {
       LEFT JOIN options o ON po.option_id = o.id
       LEFT JOIN product_images pi ON p.id = pi.product_id
     `);
+
+    // Assuming result.rows contains the data
+    const products: Product[] = result.rows;
 
     // Grouping logic by category
     const groupedProducts = products.reduce((acc: { [key: string]: GroupedProduct[] }, product) => {

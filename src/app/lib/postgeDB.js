@@ -11,13 +11,7 @@ const pool = new Pool({
 });
 
 // ฟังก์ชันในการเชื่อมต่อฐานข้อมูล
-export async function getDBConnection() {
-  const client = await pool.connect();
-  try {
-    // คุณสามารถใช้ client ในการทำงานกับฐานข้อมูลได้ที่นี่
-    return client;
-  } catch (err) {
-    console.error('Error while connecting to the database', err);
-    throw err;
-  }
+export async function getDBConnection(text, params) {
+  const res = await pool.query(text, params);
+  return res.rows;
 }

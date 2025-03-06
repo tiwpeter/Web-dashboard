@@ -24,41 +24,46 @@ type ProductImage = {
 
 export async function GET(request: Request, context: any) {
   const db = await getDBConnection();
-  const { id } = await context; // เพิ่ม await ที่นี่
+  const { id } = context.params; // ใช้ context.params เพื่อดึง `id` จาก URL
 
   try {
     // 1️⃣ ดึงข้อมูลสินค้า
-    const product = await db.get("SELECT * FROM products WHERE id = ?", [id]);
+    const productResult = await db.query("SELECT * FROM products WHERE id = $1", [id]);
+
+    const product = productResult.rows[0]; // ใช้ rows[0] เพราะ query จะคืนค่าผลลัพธ์ในรูปแบบ array ของแถว
 
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
     // 2️⃣ ดึงข้อมูล category_name จากตาราง categories (ใช้ category_id ที่อยู่ใน product)
-    const category = await db.get(
-      "SELECT name FROM categories WHERE id = ?",
+    const categoryResult = await db.query(
+      "SELECT name FROM categories WHERE id = $1",
       [product.category_id]
     );
 
-    // ถ้าไม่พบ category ให้คืน error
+    const category = categoryResult.rows[0];
+
     if (!category) {
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
 
     // 3️⃣ ดึงรูปภาพสินค้า
-    const productImages: ProductImage[] = await db.all(
-      "SELECT image_url FROM product_images WHERE product_id = ?",
+    const productImagesResult = await db.query(
+      "SELECT image_url FROM product_images WHERE product_id = $1",
       [id]
     );
+    const productImages: ProductImage[] = productImagesResult.rows;
 
     // 4️⃣ ดึงข้อมูลตัวเลือกสินค้าโดยตรงจาก options (ไม่ใช้ JOIN)
-    const options: Option[] = await db.all(
+    const optionsResult = await db.query(
       `SELECT id, option_type_name, option_name, option_price, image_url 
        FROM options 
-       WHERE id IN (SELECT option_id FROM product_options WHERE product_id = ?)`,
-
+       WHERE id IN (SELECT option_id FROM product_options WHERE product_id = $1)`,
       [id]
     );
+
+    const options: Option[] = optionsResult.rows;
 
     // 5️⃣ จัดกลุ่มตัวเลือกสินค้า (option_type_name) และจัดการข้อมูลตัวเลือก
     const optionsGrouped = options.reduce((acc: { [key: string]: GroupedOption }, opt) => {
